@@ -31,27 +31,21 @@ func Command(name string, arg ...string) *Cmd {
 	return c
 }
 
-// CombinedOutput wrapper for exec.Cmd.CombinedOutput()
-func (c *Cmd) CombinedOutput() ([]byte, error) {
-	return c.Cmd.CombinedOutput()
-}
+// MustCombinedOutput calls CombinedOutput() and panics on error
 func (c *Cmd) MustCombinedOutput() []byte {
 	out, err := c.CombinedOutput()
 	checkError(err)
 	return out
 }
 
-// Output wrapper for exec.Cmd.Output()
-func (c *Cmd) Output() ([]byte, error) {
-	return c.Cmd.Output()
-}
+// MustOutput calls Output() and panics on error
 func (c *Cmd) MustOutput() []byte {
 	out, err := c.Output()
 	checkError(err)
 	return out
 }
 
-// Run wrapper for exec.Cmd.Run()
+// Run wrapper for exec.Cmd.Run() - which also calls `createPipeScanners` beforehand to setup pipes/channels
 func (c *Cmd) Run() error {
 	err := c.createPipeScanners()
 	if err != nil {
@@ -63,7 +57,7 @@ func (c *Cmd) MustRun() {
 	checkError(c.Run())
 }
 
-// Start wrapper for exec.Cmd.Start()
+// Start wrapper for exec.Cmd.Start() - which also calls `createPipeScanners` beforehand to setup pipes/channels
 func (c *Cmd) Start() error {
 	// go routines to scan command out and err
 	err := c.createPipeScanners()
@@ -77,40 +71,28 @@ func (c *Cmd) MustStart() {
 	checkError(c.Start())
 }
 
-// StderrPipe wrapper for exec.Cmd.StderrPipe()
-func (c *Cmd) StderrPipe() (io.ReadCloser, error) {
-	return c.Cmd.StderrPipe()
-}
+// MustStderrPipe calls StderrPipe() and panics on error
 func (c *Cmd) MustStderrPipe() io.ReadCloser {
 	pipe, err := c.StderrPipe()
 	checkError(err)
 	return pipe
 }
 
-// StdinPipe wrapper for exec.Cmd.StdinPipe()
-func (c *Cmd) StdinPipe() (io.WriteCloser, error) {
-	return c.Cmd.StdinPipe()
-}
+// MustStdinPipe calls StdinPipe() and panics on error
 func (c *Cmd) MustStdinPipe() io.WriteCloser {
 	pipe, err := c.StdinPipe()
 	checkError(err)
 	return pipe
 }
 
-// StdoutPipe wrapper for exec.Cmd.StdoutPipe()
-func (c *Cmd) StdoutPipe() (io.ReadCloser, error) {
-	return c.Cmd.StdoutPipe()
-}
+// MustStdoutPipe calls StdoutPipe() and panics on error
 func (c *Cmd) MustStdoutPipe() io.ReadCloser {
 	pipe, err := c.StdoutPipe()
 	checkError(err)
 	return pipe
 }
 
-// Wait wrapper for exec.Cmd.Wait()
-func (c *Cmd) Wait() error {
-	return c.Cmd.Wait()
-}
+// MustWait calls Wait() and panics on error
 func (c *Cmd) MustWait() {
 	checkError(c.Wait())
 }
