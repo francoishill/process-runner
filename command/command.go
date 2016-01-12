@@ -10,7 +10,7 @@ import (
 type Cmd struct {
 	StdoutChannel chan string
 	StderrChannel chan string
-	Cmd           *exec.Cmd
+	*exec.Cmd
 }
 
 func checkError(err error) {
