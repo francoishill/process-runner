@@ -30,7 +30,7 @@ func sanitizeOutputString(s string) string {
 	o := s
 	o = strings.Replace(string(o), "\r", "", -1)
 	o = strings.Replace(string(o), " \n", "\n", -1)
-	return o
+	return strings.TrimSpace(o)
 }
 
 func TestChannels(t *testing.T) {
@@ -45,7 +45,7 @@ func TestChannels(t *testing.T) {
 		outChan := make(chan string)
 		errChan := make(chan string)
 
-		cmd := createCommand("echo", "hallo1", "&", "echo", "hallo2", "&", "echo", "hallo2", "1>&2")
+		cmd := createCommand("echo", "hallo1", "&", "echo", "hallo2", "&", "echo", "hallo3", "1>&2")
 		cmd.StdoutChannel = outChan
 		cmd.StderrChannel = errChan
 
@@ -67,14 +67,18 @@ func TestChannels(t *testing.T) {
 		cmd.MustWait()
 
 		So(len(outputs), ShouldEqual, 2)
+		So(sanitizeOutputString(outputs[0]), ShouldEqual, sanitizeOutputString("hallo1"))
+		So(sanitizeOutputString(outputs[1]), ShouldEqual, sanitizeOutputString("hallo2"))
+
 		So(len(errors), ShouldEqual, 1)
+		So(sanitizeOutputString(errors[0]), ShouldEqual, sanitizeOutputString("hallo3"))
 	})
 
 	Convey("Buffered channels", t, func() {
 		outChan := make(chan string, 20)
 		errChan := make(chan string, 20)
 
-		cmd := createCommand("echo", "hallo1", "&", "echo", "hallo2", "&", "echo", "hallo2", "1>&2")
+		cmd := createCommand("echo", "hallo1", "&", "echo", "hallo2", "&", "echo", "hallo3", "1>&2")
 		cmd.StdoutChannel = outChan
 		cmd.StderrChannel = errChan
 
@@ -94,6 +98,42 @@ func TestChannels(t *testing.T) {
 		cmd.MustRun()
 
 		So(len(outputs), ShouldEqual, 2)
+		So(sanitizeOutputString(outputs[0]), ShouldEqual, sanitizeOutputString("hallo1"))
+		So(sanitizeOutputString(outputs[1]), ShouldEqual, sanitizeOutputString("hallo2"))
+
 		So(len(errors), ShouldEqual, 1)
+		So(sanitizeOutputString(errors[0]), ShouldEqual, sanitizeOutputString("hallo3"))
+	})
+
+	Convey("Unbuffered channels with prefix", t, func() {
+		outChan := make(chan string)
+		errChan := make(chan string)
+
+		cmd := createCommand("echo", "hallo1", "&", "echo", "hallo2", "&", "echo", "hallo3", "1>&2")
+		cmd.OutputPrefix = "zzz"
+		cmd.StdoutChannel = outChan
+		cmd.StderrChannel = errChan
+
+		outputs := []string{}
+		errors := []string{}
+		go func() {
+			for {
+				select {
+				case outMsg := <-outChan:
+					outputs = append(outputs, outMsg)
+				case errMsg := <-errChan:
+					errors = append(errors, errMsg)
+				}
+			}
+		}()
+
+		cmd.MustRun()
+
+		So(len(outputs), ShouldEqual, 2)
+		So(sanitizeOutputString(outputs[0]), ShouldEqual, sanitizeOutputString("zzzhallo1"))
+		So(sanitizeOutputString(outputs[1]), ShouldEqual, sanitizeOutputString("zzzhallo2"))
+
+		So(len(errors), ShouldEqual, 1)
+		So(sanitizeOutputString(errors[0]), ShouldEqual, sanitizeOutputString("zzzhallo3"))
 	})
 }

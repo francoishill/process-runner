@@ -11,6 +11,7 @@ type Cmd struct {
 	*exec.Cmd
 	createdPipes bool
 
+	OutputPrefix  string
 	StdoutChannel chan string
 	StderrChannel chan string
 }
@@ -25,7 +26,7 @@ func checkError(err error) {
 // an exec.Cmd struct embedded in it
 func Command(name string, arg ...string) *Cmd {
 	c := new(Cmd)
-	// set the exec.Cmd
+	c.OutputPrefix = ""
 	c.Cmd = exec.Command(name, arg...)
 	return c
 }
@@ -131,7 +132,7 @@ func (c *Cmd) createPipeScanners() error {
 
 		go func() {
 			for outScanner.Scan() {
-				c.StdoutChannel <- outScanner.Text()
+				c.StdoutChannel <- c.OutputPrefix + outScanner.Text()
 			}
 		}()
 	}
@@ -147,7 +148,7 @@ func (c *Cmd) createPipeScanners() error {
 		// Scan for text
 		go func() {
 			for errScanner.Scan() {
-				c.StderrChannel <- errScanner.Text()
+				c.StderrChannel <- c.OutputPrefix + errScanner.Text()
 			}
 		}()
 	}
