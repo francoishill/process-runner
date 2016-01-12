@@ -1,2 +1,4 @@
 # process-runner
-A powerful wrapper to run/execute processes
+A powerful wrapper around os/exec `Cmd`
+
+Inspiration from https://github.com/jesselucas/executil
