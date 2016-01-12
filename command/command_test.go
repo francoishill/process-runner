@@ -78,8 +78,6 @@ func TestChannels(t *testing.T) {
 		cmd.StdoutChannel = outChan
 		cmd.StderrChannel = errChan
 
-		cmd.MustStart()
-
 		outputs := []string{}
 		errors := []string{}
 		go func() {
@@ -93,7 +91,7 @@ func TestChannels(t *testing.T) {
 			}
 		}()
 
-		cmd.MustWait()
+		cmd.MustRun()
 
 		So(len(outputs), ShouldEqual, 2)
 		So(len(errors), ShouldEqual, 1)

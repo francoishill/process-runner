@@ -8,9 +8,11 @@ import (
 
 //Cmd is a wrapper around Cmd
 type Cmd struct {
+	*exec.Cmd
+	createdPipes bool
+
 	StdoutChannel chan string
 	StderrChannel chan string
-	*exec.Cmd
 }
 
 func checkError(err error) {
@@ -50,6 +52,10 @@ func (c *Cmd) MustOutput() []byte {
 
 // Run wrapper for exec.Cmd.Run()
 func (c *Cmd) Run() error {
+	err := c.createPipeScanners()
+	if err != nil {
+		return err
+	}
 	return c.Cmd.Run()
 }
 func (c *Cmd) MustRun() {
@@ -60,7 +66,9 @@ func (c *Cmd) MustRun() {
 func (c *Cmd) Start() error {
 	// go routines to scan command out and err
 	err := c.createPipeScanners()
-	checkError(err)
+	if err != nil {
+		return err
+	}
 
 	return c.Cmd.Start()
 }
@@ -109,6 +117,10 @@ func (c *Cmd) MustWait() {
 // Create stdout, and stderr pipes for given *Cmd
 // Only works with cmd.Start()
 func (c *Cmd) createPipeScanners() error {
+	if c.createdPipes {
+		return nil
+	}
+
 	if c.StdoutChannel != nil {
 		stdout, err := c.Cmd.StdoutPipe()
 		if err != nil {
